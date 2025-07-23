@@ -56,44 +56,44 @@ const transcriptFactory = (
 
 export const Transcript = (): JSX.Element | null => {
     const { chats, push } = useChatLogger();
-    useEffect(()=>{
-        // Create IE + others compatible event handler
-        var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
-        var eventer = window[eventMethod];
-        var messageEvent = eventMethod == "attachEvent" ? "onmessage" : "message";
-        // Listen to message from child window
-        function newMessageReceievedHandler(e){
-            switch (e.data.type) {
+    useEffect(() => {
+        const newMessageReceivedHandler = (event: MessageEvent) => {
+            // Ensure the event has the expected structure
+            if (!event.data || !event.data.type || !event.data.detail) {
+                return;
+            }
+
+            switch (event.data.type) {
                 case 'new-message-received':
-                    let userRole = e.data.detail.participantRole;
-                    let message = e.data.detail.content;
-                    let variant = userRole === 'END_USER' ? 'inbound' : 'outbound';
-                    let metaLabel =
-                        userRole === 'END_USER' ? 'said by customer at ' : 'said by agent at ';
-                    push(transcriptFactory(variant, message, metaLabel));
+                    const { participantRole, content } = event.data.detail;
+                    const variant = participantRole === 'END_USER' ? 'inbound' : 'outbound';
+                    const metaLabel =
+                        participantRole === 'END_USER' ? 'said by customer at ' : 'said by agent at ';
+                    push(transcriptFactory(variant, content, metaLabel));
                     break;
             }
-        }
+        };
 
-        eventer(messageEvent, newMessageReceievedHandler, false);
+        window.addEventListener('message', newMessageReceivedHandler);
 
         return () => {
-            const removeEventMethod = window.removeEventListener ? "removeEventListener" : "detachEvent";
-            const removeEventer = window[removeEventMethod];
-            const removeMessageEvent = removeEventMethod == "detachEvent" ? "onmessage" : "message";
-            removeEventer(removeMessageEvent, newMessageReceievedHandler)
-        }
+            window.removeEventListener('message', newMessageReceivedHandler);
+        };
     },[]);
 
-    return <div style={{
-        display: 'flex',
-        flex: '1 1 auto',
-        overflow: 'auto',
-        padding: '1.25rem 1rem',
-        lineHeight: '1rem',
-        color: 'rgb(18, 28, 45)'}
-}>
-        <div style={{ width: '100%' }}><ChatLogger chats={chats} /></div></div>;
+    return (
+        <Box
+            display="flex"
+            flex="1 1 auto"
+            overflow="auto"
+            paddingX="space70"
+            paddingY="space80"
+            lineHeight="lineHeight20"
+            color="colorText"
+        >
+            <Box width="100%"><ChatLogger chats={chats} /></Box>
+        </Box>
+    );
 };
 
 Transcript.displayName = 'Transcript';
