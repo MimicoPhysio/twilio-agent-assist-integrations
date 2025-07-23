@@ -1,0 +1,24 @@
+steps:
+
+# Build the container image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/agentspace-notebookllm-ent/cloud-run-source-deploy/mimico-twilio-webhook:latest', '.']
+# Push the container image to Artifact Registry
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'us-central1-docker.pkg.dev/agentspace-notebookllm-ent/cloud-run-source-deploy/mimico-twilio-webhook:latest']
+# Deploy container image to Cloud Run
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: gcloud
+  args:
+  - 'run'
+  - 'deploy'
+  - 'mimico-twilio-webhook'
+  - '--image'
+  - 'us-central1-docker.pkg.dev/agentspace-notebookllm-ent/cloud-run-source-deploy/mimico-twilio-webhook:latest'
+  - '--region'
+  - 'us-central1'
+  - '--platform'
+  - 'managed'
+  - '--quiet'
+images:
+- 'us-central1-docker.pkg.dev/agentspace-notebookllm-ent/cloud-run-source-deploy/mimico-twilio-webhook:latest'
